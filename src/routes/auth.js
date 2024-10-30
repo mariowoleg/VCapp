@@ -3,7 +3,6 @@ import UserModel from "../models/User.js";
 
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
-import verifyToken from "./verifyToken.js";
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -43,6 +42,7 @@ router.post("/register", async (req,res) => {
 
 router.post("/login", async (req,res) => {
     //Data validation
+    console.log("Por fin")
     const validation = loginValidation(req.body)
     if(validation.error){
         return res.status(400).send(validation.error.details[0].message)
@@ -58,18 +58,22 @@ router.post("/login", async (req,res) => {
     
     
     //Create and assign token
-    const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET)
-    res.header("auth-token", token).send({"token": token})
-})
+    const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET,
+        {
+            expiresIn: "7d"
+        }
+    )
+    res
+        .cookie("access_token", token, {
+            httpOnly: true,
+            sameSite: 'None',
+            secure: true,
+            path:"/",
+            maxAge: 60 * 60 * 24 * 7 * 1000 // 7 días en milisegundos
+        })
+        .send({ user });
 
-router.get("/me", verifyToken, async (req, res) => {
-    try {
-      // request.user is getting fetched from Middleware after token authentication
-      const user = await UserModel.findById(req.user._id);
-      res.json({"response": "success"});
-    } catch (e) {
-      res.send({ message: "Error in Fetching user" });
-    }
-});
+
+})
 
 export default router;

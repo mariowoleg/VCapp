@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Login(){
@@ -11,10 +11,14 @@ export default function Login(){
     const handleSubmit = (e) => {
         e.preventDefault()
         
-        axios.post('http://localhost:3001/api/users/login', {email, password})
+        axios.post('http://localhost:3001/api/users/login', {email, password}, { withCredentials: true })
           .then(result => {
-            console.log("Resultado del login:")
+            console.log("Resultado del login desde el componente del Login:")
             console.log(result)
+
+            if(result.status === 200){
+              navigate("/protected")
+            }
           })
           .catch(error => console.log(error))
       
